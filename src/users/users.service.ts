@@ -1,8 +1,18 @@
 import { UsersRepository } from './users.repository';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import * as bcrypt from 'bcrypt';
+
+const isDuplicateKeyError = (err: unknown): boolean =>
+  typeof err === 'object' &&
+  err !== null &&
+  (err as { code?: unknown }).code === 11000;
+
 @Injectable()
 export class UsersService {
   constructor(private readonly UsersRepository: UsersRepository) {}
@@ -12,10 +22,17 @@ export class UsersService {
   }
 
   async create(createUserInput: CreateUserInput) {
-    return this.UsersRepository.create({
-      ...createUserInput,
-      password: await this.hashPassword(createUserInput.password),
-    });
+    try {
+      return await this.UsersRepository.create({
+        ...createUserInput,
+        password: await this.hashPassword(createUserInput.password),
+      });
+    } catch (err) {
+      if (isDuplicateKeyError(err)) {
+        throw new ConflictException('Email already in use.');
+      }
+      throw err;
+    }
   }
 
   async findAll() {

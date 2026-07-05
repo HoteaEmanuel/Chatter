@@ -5,7 +5,7 @@ import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly userService: UsersService) {
+  constructor(private readonly usersService: UsersService) {
     super({
       usernameField: 'email',
     });
@@ -13,9 +13,9 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 
   async validate(email: string, password: string) {
     try {
-      return await this.userService.verifyUser(email, password);
-    } catch (err) {
-      throw new UnauthorizedException(err);
+      return await this.usersService.verifyUser(email, password);
+    } catch (_err) {
+      throw new UnauthorizedException('Credentials are not valid.');
     }
   }
 }

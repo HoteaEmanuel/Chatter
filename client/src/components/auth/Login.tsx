@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Stack,
   Typography,
@@ -6,32 +6,26 @@ import {
   Button,
   Link as MUILink,
 } from "@mui/material";
-import { error } from "console";
-import { Link } from "react-router-dom";
-import { useCreateUser } from "../../hooks/useCreateUser";
+import useLogin from "../../hooks/useLogin";
+import { Link, useNavigate } from "react-router-dom";
+import { useGetMe } from "../../hooks/useGetMe";
 
 const Login = () => {
-  const [createUser] = useCreateUser();
-  const [name, setName] = useState<string>("");
+  const { error, login } = useLogin();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
+  const { data } = useGetMe();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (data) navigate("/");
+  }, [data, navigate]);
+
   const handleLogin = async () => {
     setLoading(true);
-    setError("");
     try {
-      await createUser({
-        variables: {
-          createUserInput: {
-            email,
-            name,
-            password,
-          },
-        },
-      });
+      await login({ email, password });
     } catch (error) {
-      setError("Failed to signup");
     } finally {
       setLoading(false);
     }
@@ -59,13 +53,6 @@ const Login = () => {
         Login
       </Typography>
       {error && <Typography sx={{ color: "red" }}>{error}</Typography>}
-      <TextField
-        type="text"
-        label="Name"
-        variant="outlined"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
 
       <TextField
         type="email"
@@ -73,6 +60,8 @@ const Login = () => {
         variant="outlined"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        error={!!error}
+        helperText={error}
       />
       <TextField
         type="password"
@@ -80,6 +69,8 @@ const Login = () => {
         variant="outlined"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        error={!!error}
+        helperText={error}
       />
       <Button variant="contained" onClick={handleLogin} disabled={loading}>
         {!loading ? "Log in" : "Logging in..."}

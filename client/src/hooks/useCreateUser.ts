@@ -1,7 +1,6 @@
 import { gql } from "@apollo/client";
 import { useMutation } from "@apollo/client/react";
 import { User } from "../models/User";
-
 interface CreateUserInput {
   createUserInput: {
     name?: string;

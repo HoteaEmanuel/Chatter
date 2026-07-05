@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useCreateUser } from "../../hooks/useCreateUser";
 import Stack from "@mui/material/Stack";
 import { Typography, TextField, Button, Link as MUILink } from "@mui/material";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
+import { extractErrorMessage } from "../../utils/errors";
+import { useGetMe } from "../../hooks/useGetMe";
+import useLogin from "../../hooks/useLogin";
 const Signup = () => {
   const [createUser] = useCreateUser();
   const [name, setName] = useState<string>("");
@@ -11,14 +13,22 @@ const Signup = () => {
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const navigate = useNavigate();
+  const { data } = useGetMe();
+
+  const { login } = useLogin();
+
+  useEffect(() => {
+    if (data) navigate("/");
+  }, [data, navigate]);
 
   const handleSubmit = async () => {
     setLoading(true);
     setError("");
     if (
-      name.trim.length < 3 ||
-      email.trim.length < 3 ||
-      password.trim.length < 8
+      name.trim().length < 3 ||
+      email.trim().length < 3 ||
+      password.trim().length < 8
     ) {
       setError(
         "Invalid data - Name needs at least 3 characters - Password needs at least 8, uppercase and lowercase and at least a special character",
@@ -34,13 +44,25 @@ const Signup = () => {
           },
         },
       });
+
+      await login({ email, password });
+      setError("");
     } catch (error) {
-      setError("Failed to signup");
+      console.log("Error");
+      console.log(error);
+      const errorMessage = extractErrorMessage(error);
+      if (errorMessage) {
+        setError(errorMessage);
+        return;
+      }
+      setError("Unknown error occured.");
     } finally {
       setLoading(false);
     }
   };
 
+  console.log("STATE ErROR");
+  console.log(error);
   return (
     <Stack
       spacing={4}
@@ -70,6 +92,7 @@ const Signup = () => {
         variant="outlined"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        error={!!error}
       />
 
       <TextField
@@ -78,6 +101,7 @@ const Signup = () => {
         variant="outlined"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        error={!!error}
       />
       <TextField
         type="password"
@@ -85,6 +109,7 @@ const Signup = () => {
         variant="outlined"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        error={!!error}
       />
       <Button variant="contained" onClick={handleSubmit} disabled={loading}>
         {!loading ? "Sign up" : "Signing in..."}

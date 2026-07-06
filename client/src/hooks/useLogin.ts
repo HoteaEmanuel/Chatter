@@ -19,7 +19,7 @@ const useLogin = () => {
 
     if (!res.ok) {
       if (res.status === 401) setError("Credentials are not valid.");
-      else setError("Unknown error occured.ff");
+      else setError("Unknown error occured.");
       return;
     }
 

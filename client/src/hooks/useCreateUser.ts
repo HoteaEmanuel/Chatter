@@ -1,24 +1,16 @@
-import { gql } from "@apollo/client";
 import { useMutation } from "@apollo/client/react";
-import { User } from "../models/User";
-interface CreateUserInput {
-  createUserInput: {
-    name?: string;
-    email: string;
-    password: string;
-  };
-}
+import { graphql } from "../gql";
 
-const CREATE_USER = gql`
+const createUserDocument = graphql(`
   mutation CreateUser($createUserInput: CreateUserInput!) {
     createUser(createUserInput: $createUserInput) {
       _id
       email
     }
   }
-`;
+`);
 const useCreateUser = () => {
-  return useMutation<User, CreateUserInput>(CREATE_USER);
+  return useMutation(createUserDocument);
 };
 
 export { useCreateUser };

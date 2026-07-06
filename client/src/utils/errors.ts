@@ -1,4 +1,4 @@
-import { CombinedGraphQLErrors } from '@apollo/client/errors';
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
 export interface OriginalErrorExtensions {
   originalError?: {
@@ -12,9 +12,9 @@ export const extractErrorMessage = (err: unknown) => {
 
   const graphQLError = err.errors[0];
   const extensions = graphQLError?.extensions as
-    OriginalErrorExtensions | undefined;
-  const errorMessage =
-    extensions?.originalError?.message ?? graphQLError?.message;
+    | OriginalErrorExtensions
+    | undefined;
+  const errorMessage = extensions?.originalError?.message ?? graphQLError?.message;
   if (Array.isArray(errorMessage)) {
     return formatErrorMessage(errorMessage[0]);
   } else if (errorMessage) return formatErrorMessage(errorMessage);

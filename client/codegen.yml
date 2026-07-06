@@ -6,3 +6,6 @@ generates:
     preset: "client"
     plugins: []
     presetConfig: { fragmentMasking: false }
+    config:
+      scalars:
+        DateTime: string

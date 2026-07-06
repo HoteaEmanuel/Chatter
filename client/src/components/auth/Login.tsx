@@ -36,10 +36,8 @@ const Login = () => {
       direction={"column"}
       sx={{
         height: "100vh",
-        maxWidth: {
-          xs: "70%",
-          md: "50%",
-        },
+        maxWidth: 360,
+
         margin: "0 auto",
         justifyContent: "center",
       }}

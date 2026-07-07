@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User } from 'src/users/entities/user.entity';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { TokenPayload } from './token-payload.interface';
 import { JwtService } from '@nestjs/jwt';
@@ -28,6 +28,22 @@ export class AuthService {
       httpOnly: true,
       expires,
     });
+  }
+
+  verifyWs(request: Request): TokenPayload {
+    const cookieHeader = request.headers.cookie;
+    if (!cookieHeader) {
+      throw new UnauthorizedException('No authentication cookie provided');
+    }
+    const cookies = cookieHeader.split('; ');
+    const authCookie = cookies.find((cookie) =>
+      cookie.includes('Authentication'),
+    );
+    const jwt = authCookie?.split('Authentication=')[1];
+    if (!jwt) {
+      throw new UnauthorizedException('No authentication token provided');
+    }
+    return this.jwtService.verify(jwt);
   }
 
   logout(response: Response) {

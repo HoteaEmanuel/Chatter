@@ -1,4 +1,3 @@
-import { PubSubOptions } from './../../../node_modules/graphql-subscriptions/dist/pubsub.d';
 import { Global, Module } from "@nestjs/common";
 import { PUB_SUB } from "../constants/injection-tokens";
 import { PubSub } from "graphql-subscriptions";
@@ -9,6 +8,5 @@ import { PubSub } from "graphql-subscriptions";
         useValue: new PubSub()
     }],
     exports: [PUB_SUB],
-});
-
-export class PubSubModule {};
+})
+export class PubSubModule {}

@@ -15,8 +15,26 @@ export class ChatsService {
     });
   }
 
-  async findAll() {
-    return this.chatsRepository.find({});
+  userChatFilter(userId: string) {
+    return {
+      $or: [
+        {
+          userId,
+        },
+        {
+          userIds: {
+            $in: [userId],
+          },
+        },
+        {
+          isPrivate: false,
+        },
+      ],
+    };
+  }
+
+  async findAll(userId: string) {
+    return this.chatsRepository.find({ ...this.userChatFilter(userId) });
   }
 
   async findOne(_id: string) {

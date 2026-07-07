@@ -19,20 +19,42 @@ import { useGetMessages } from "../../hooks/useGetMessages";
 import { snackVar } from "../../constants/snack";
 import { UNKNOWN_ERROR_SNACK_MESSAGE } from "../../constants/errors";
 import { ArrowDownward } from "@mui/icons-material";
+import { useMessageCreated } from "../../hooks/useMessageCreated";
+import { MessageFragmentFragment } from "../../gql/graphql";
 const Chat = () => {
   const params = useParams();
 
   const chatId = params._id!;
   const { data } = useGetChat({ _id: chatId });
 
-  const [createMessage] = useCreateMessage(chatId);
+  const [createMessage] = useCreateMessage();
+  const [messages, setMessages] = useState<MessageFragmentFragment[]>([]);
 
   const [message, setMessage] = useState("");
   const messagesEnd = useRef<HTMLDivElement>(null);
   const messagesContainer = useRef<HTMLDivElement>(null);
   const [hasOverflow, setHasOverflow] = useState(false);
   const location = useLocation();
-  const { data: messages } = useGetMessages({ chatId });
+
+  const { data: latestMessage } = useMessageCreated({ chatId });
+  const { data: existingMessages } = useGetMessages({ chatId });
+
+  useEffect(() => {
+    if (existingMessages) setMessages(existingMessages.messages);
+  }, [existingMessages]);
+
+  useEffect(() => {
+    console.log("MESSAGE FROM SOCKET");
+    console.log(latestMessage);
+    const existingLatestMessage = messages[messages.length - 1]?._id;
+    if (
+      latestMessage?.messageCreated &&
+      existingLatestMessage !== latestMessage.messageCreated._id
+    ) {
+      setMessages([...messages, latestMessage.messageCreated]);
+    }
+  }, [latestMessage, messages]);
+
   const scrollToEnd = () => {
     messagesEnd.current?.scrollIntoView();
   };
@@ -71,20 +93,20 @@ const Chat = () => {
     checkOverflow();
     window.addEventListener("resize", checkOverflow);
     return () => window.removeEventListener("resize", checkOverflow);
-  }, [messages?.messages.length]);
+  }, [messages?.length]);
 
   return (
-    <Stack sx={{ height: "100%", justifyContent: "space-between" }}>
+    <Stack sx={{ height: "90vh", justifyContent: "space-between" }}>
       <Container
         sx={{
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          height: "100%",
+          // height: "100%",
         }}
       >
         <h1>{data?.chat.name}</h1>
-        {messages?.messages.length === 0 && (
+        {messages?.length === 0 && (
           <Typography
             variant="caption"
             sx={{ width: "100%", textAlign: "center" }}
@@ -93,37 +115,44 @@ const Chat = () => {
           </Typography>
         )}
 
-        {messages?.messages.length && (
+        {messages?.length && (
           <Box
             sx={{ overflow: "auto", height: "75vh" }}
             ref={messagesContainer}
           >
-            {messages?.messages.map((message) => (
-              <Grid
-                container
-                sx={{ alignItems: "center", marginBottom: "1rem" }}
-              >
-                <Grid size={{ xs: 2, lg: 1 }}>
-                  <Avatar src="" sx={{ width: 40, height: 40 }} />
-                </Grid>
-                <Grid size={{ xs: 10, lg: 11 }}>
-                  <Stack>
-                    <Paper sx={{ width: "fit-content" }}>
-                      <Typography sx={{ padding: "0.5rem" }}>
-                        {message.content}
-                      </Typography>
-                    </Paper>
+            {[...messages]
+              .sort((messageA, messageB) => {
+                return (
+                  new Date(messageA.createdAt).getTime() -
+                  new Date(messageB.createdAt).getTime()
+                );
+              })
+              .map((message) => (
+                <Grid
+                  container
+                  sx={{ alignItems: "center", marginBottom: "1rem" }}
+                >
+                  <Grid size={{ xs: 2, lg: 1 }}>
+                    <Avatar src="" sx={{ width: 40, height: 40 }} />
+                  </Grid>
+                  <Grid size={{ xs: 10, lg: 11 }}>
+                    <Stack>
+                      <Paper sx={{ width: "fit-content" }}>
+                        <Typography sx={{ padding: "0.5rem" }}>
+                          {message.content}
+                        </Typography>
+                      </Paper>
 
-                    <Typography
-                      variant="caption"
-                      sx={{ marginLeft: "0.25rem" }}
-                    >
-                      {new Date(message?.createdAt).toLocaleTimeString()}
-                    </Typography>
-                  </Stack>
+                      <Typography
+                        variant="caption"
+                        sx={{ marginLeft: "0.25rem" }}
+                      >
+                        {new Date(message?.createdAt).toLocaleTimeString()}
+                      </Typography>
+                    </Stack>
+                  </Grid>
                 </Grid>
-              </Grid>
-            ))}
+              ))}
             <div ref={messagesEnd} />
 
             {hasOverflow && (
